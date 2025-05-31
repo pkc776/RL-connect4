@@ -24,6 +24,22 @@ class RandomAgent(BaselineAgent):
         policy = self.get_exploration_policy(obs=obs)
         return policy
 
+    # 把 obs 改成 observation，並加上 **kwargs
+    def get_action(self, observation, legal_actions, **kwargs):
+        """
+        傳入：
+          observation    -- 當前棋局的觀察 (game board)，這裡可以忽略
+          legal_actions  -- 一個可下 column 的列表 (例如 [0, 1, 3, 5])
+          **kwargs       -- 其他多餘的 keyword（例如 player_id、info 等），先接住以免出錯
+        回傳：
+          在 legal_actions 中隨機選一個 column index，作為下一步。
+        """
+        # legal_actions 可能是 list 或 numpy array，先確保它是 list
+        la = list(legal_actions)
+        # 隨機從合法動作裡面挑一個
+        choice = np.random.choice(la)
+        return choice
+
 
 if __name__ == "__main__":
     # DEMO
