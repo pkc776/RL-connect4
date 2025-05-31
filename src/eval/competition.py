@@ -2,12 +2,21 @@ from tqdm import trange
 from typing import Tuple, List
 
 import torch
+import os
+import sys
+
+SRC_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+if SRC_ROOT not in sys.path:
+    sys.path.append(SRC_ROOT)
 
 from src.agents.agent import Agent
 from src.environment.connect_game_env import ConnectGameEnv
 from src.eval.run_episode import run_episode
 
-
+from muzero_wrapper import MuZeroStateWrapper
+from src.agents.baselines.DQNAgent import DQNAgent
+from src.agents.baselines.MuZeroAgent import MuZeroAgent
+from src.agents.baselines.random_agent import RandomAgent
 def _get_initial_actions(game_id: int, ncols: int = 7) -> List[int]:
     """
     Compute which actions will be played to initialize the board before the
@@ -154,22 +163,29 @@ if __name__ == "__main__":
     from pprint import pprint
 
     # 1) import agents and environment
-    from src.agents.baselines.random_agent import RandomAgent
-    from src.agents.baselines.leftmost_agent import LeftmostAgent
-    from src.environment.connect_game_env import ConnectGameEnv
-
-    # 2) initialize environment
+    
+    arch_json      = "./src/models/architectures/cnet128.json"
+    pretrained_conv= "./src/models/saved_models/supervised_cnet128.pt"
+    dqn_checkpoint = "./src/models/saved_models/best_dqn.pt"
+    muzero_checkpoint = "./src/muzero/results/connect4/model.checkpoint"
+    RandomAgent_agent = RandomAgent()
+    muzero_agent = MuZeroAgent(checkpoint_path=muzero_checkpoint, device="gpu")
+    #dqn_agent    = DQNAgent(
+    #    arch_json_path=arch_json,
+    #    pretrained_conv_path=pretrained_conv,
+    #    checkpoint_path=dqn_checkpoint,
+    #    device="cpu"  # 若要用 GPU，就改 "cuda"
+    #)
+    # 2) initialize environment 
     env = ConnectGameEnv()
-
+    
     # 3) initialize agent1 and agent2
-    agent1 = LeftmostAgent()
-    agent2 = RandomAgent()
 
     # 4) run a competition and display the results
     res, last_obs_list = competition(
         env=env,
-        agent1=agent1,
-        agent2=agent2,
+        agent1=muzero_agent,    
+        agent2=RandomAgent_agent,
         progress_bar=True,
     )
 
